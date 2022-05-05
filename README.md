@@ -40,14 +40,157 @@ $ sudo apt upgrade
 $ sudo apt install git
 ```
 
-Now clone the latest version of the Basics Station and build the executable on your target:
+Next, clone the latest version of the Basics Station and build the executable on your target:
 ```
-git clone https://github.com/lorabasics/basicstation.git
-cd basicstation
-make platform=rpi variant=std
+$ git clone https://github.com/lorabasics/basicstation.git
+$ cd basicstation
+$ make platform=rpi variant=std
 ```
 This will take a while. During the build process, dependencies such as [mbed TLS](https://github.com/ARMmbed/mbedtls/) and the libloragw [SX1301](https://github.com/Lora-net/lora_gateway)/[SX1302](https://github.com/Lora-net/sx1302_hal) Driver/HAL are downloaded and compiled.
 
-## Configuration
+## Testing the installation
+You will find some examples how to use the basic station in the examples folder. Assuming SPI is enabled and wired correctly, you can test the station by passing the LoRaWAN concentrator (SPI device) as an environment variable using `RADIODEV`:
+```
+$ cd examples/live-s2.sm.tc
+$ RADIODEV=/dev/spidev0.0 ../../build-rpi-std/bin/station
+```
+The example configuration connects to a public test server s2.sm.tc through which the basic station fetches all required credentials and a channel plan matching the region as determined from the IP address of the gateway. Provided there are active LoRa devices in proximity, received LoRa frames are printed in the log output on `stderr`
 
-[Offical LoRa Basics™ Station documentation](https://lora-developers.semtech.com/build/software/lora-basics/lora-basics-for-gateways/)
+If you see an error like `Concentrator start failed: lgw_start`, this is likely due to the missing reset of the SX1301 (see next chapter).
+
+## Concentrator reset
+The SX1301 digital baseband chip on the iC880a concentrator board should be reset after power-up. However, this initial reset of the SX1301 is not performed by the basic station. We have to do this manually by controlling the correct GPIO pin: GPIO 5 for the IMST Light Gateway or GPIO 25 (corresponds to RPi Pin 22) when using the DIY wiki of TTN ZH)
+
+We want keep the configuration files as well as the reset script together, so lets create a new folder inside the user directory.
+```
+$ cd ~
+$ mkdir TTN
+$ cd TTN
+```
+
+Next, create a reset_gw.sh file:
+```
+$ nano reset_gw.sh
+```
+and populate it with the following commands:
+```
+#! /bin/bash
+
+SX1301_RESET_BCM_PIN=5
+echo "$SX1301_RESET_BCM_PIN"  > /sys/class/gpio/export
+echo "out" > /sys/class/gpio/gpio$SX1301_RESET_BCM_PIN/direction
+echo "0"   > /sys/class/gpio/gpio$SX1301_RESET_BCM_PIN/value
+sleep 0.1
+echo "1"   > /sys/class/gpio/gpio$SX1301_RESET_BCM_PIN/value
+sleep 0.1
+echo "0"   > /sys/class/gpio/gpio$SX1301_RESET_BCM_PIN/value
+sleep 0.1
+echo "$SX1301_RESET_BCM_PIN"  > /sys/class/gpio/unexport
+```
+Then, press Ctrl+X to exit, press Y to save and Enter.
+Note: replace the number 5 on the 3rd line with 25 when using the DIY version instead of the IMST Light Gateway.
+
+Make this file executable by changing its persmission:
+```
+$ chmod +x reset_gw.sh
+```
+
+
+## Configuration
+Create the station configuration file station.conf 
+```
+$ nano station.conf
+```
+
+and populate it with:
+```
+{
+   "radio_conf": {                  /* Actual channel plan is controlled by the server */
+       "lorawan_public": true,      /* is default */
+       "clksrc": 1,                 /* radio_1 provides clock to concentrator */
+       "device": "/dev/spidev0.0",  /* default SPI device is platform specific */
+       "pps": true,
+       "radio_0": {
+           /* freq/enable provided by LNS - only hardware-specific settings are listed here */
+           "type": "SX1257",
+           "rssi_offset": -166.0,
+           "tx_enable": true
+       },
+       "radio_1": {
+           "type": "SX1257",
+           "rssi_offset": -166.0,
+           "tx_enable": false
+       }
+       /* chan_multiSF_X, chan_Lora_std, chan_FSK provided by LNS */
+   },
+   "station_conf": {
+     "log_file":    "stderr",
+     "log_level":   "DEBUG",
+     "log_size":    10e6,
+     "log_rotate":  3
+   }
+}
+```
+Then, press Ctrl+X to exit, press Y to save and Enter.
+
+Further details of the configuration file can be found in the official [Semtech LoRa Basics™ Station documentation](https://lora-developers.semtech.com/build/software/lora-basics/lora-basics-for-gateways/?url=conf.html).
+
+The Basics Station software includes two sub-protocols for connecting the gateway to the network server, the LoRaWAN Network Server (LNS), and the Configuration and Update Server (CUPS) protocol.
+
+The LNS protocol establishes a data connection between the Basics Station compatible gateway and the web server. LoRa upstream and downstream messages are exchanged over a data connection via secure WebSockets.
+
+The CUPS protocol enables credential management, as well as remote configuration of gateways and firmware updates. 
+
+In this reference setup we will use the LNS method. Create a file called tc.uri 
+```
+nano tc.uri
+```
+and populate it with the server name. Packet transport with the The Things Network V3 LNS happens on port 8887.
+```
+wss://{eu1|nam1|au1}.cloud.thethings.network:8887
+```
+press Ctrl+X to exit, press Y to save and Enter. Note: Choose your closest geographically located server to minimize network latency (i.e. eu1 for Europe).
+
+Next, we need to establish a trust relationship with the TTN network server. TTN uses the Let's Encrypt ISRG Root X1 Trust (expires June 2035). Download this root certificate and save it as tc.trust file:
+```
+$ curl https://letsencrypt.org/certs/isrgrootx1.pem.txt -o tc.trust
+```
+Note: You may also use a self signed certificat, if you need to connect to your private TTS network server (more information [here](https://www.thethingsindustries.com/docs/reference/root-certificates/)).
+
+Last, we also need to create a tc.key file to authorise the gateway, but more on this later, since first we need to register the gateway.
+
+## Register gateway
+To register your gateway with TTN, you will need the gateway’s EUI, which is made up from the Raspberry Pi’s MAC address. It is shown in the first couple of lines when starting the station, i.e.
+```
+2022-05-02 11:22:20.288 [SYS:INFO] proto EUI   : 0:b827:eb22:6cb9       (/sys/class/net/eth0/address)
+```
+Log into the TTN [console](https://console.cloud.thethings.network/) and click "Go to gateways"
+
+Then click "Add Gateway". The following dialog should appear:
+
+Enter your Gateway EUI into the Gateway EUI field, give your gateway a unique Gateway ID and a suitable name.
+
+Now set the correct frequency plan for your country or location:
+
+And click Create gateway. You should now have an enrolled gateway.
+
+The important thing now is to create the LNS API key in ordert to authorise your gateway. Click API keys and then + Add API key (in the top righthand corner).
+
+Give your API key a name (e.g. lns-key) and change the rights to grant individual rights to "link as Gateway to a Gateway Server for traffic exchange, i.e. write uplink and read downlink" as per the example below. Then click Create API key to create it.
+
+You will be given a one time opportunity to copy the key. Click the copy button (highlighted below by the red box). Now, you can create our tc.key file back in the RPi console
+```
+$ nano tc.key
+```
+and past your key right after the following text:
+```
+Authorization: Bearer XXXXXX
+```
+where XXXXX is the coppied API key. Press Ctrl+X to exit, press Y to save and Enter.
+
+Now start/restart station inside your TTN folder and your gateway should successfully register:
+```
+$ ~/basicstation/build-rpi-std/bin/station
+```
+Note: the Basic Station automatically takes the config files inside the folder, where you start the station.
+More information on the Basic Station can be found in the [Offical LoRa Basics™ Station documentation](https://lora-developers.semtech.com/build/software/lora-basics/lora-basics-for-gateways/) from Semtech.
