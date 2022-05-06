@@ -69,9 +69,9 @@ $ mkdir TTN
 $ cd TTN
 ```
 
-Next, create a reset_gw.sh file:
+Next, create a reset_concentrator.sh file:
 ```
-$ nano reset_gw.sh
+$ nano reset_concentrator.sh
 ```
 and populate it with the following commands:
 ```
@@ -95,7 +95,7 @@ Note: replace the number 5 on the 3rd line with 25 when using the DIY version in
 
 Make this file executable by changing its permission:
 ```
-$ chmod +x reset_gw.sh
+$ chmod +x reset_concentrator.sh
 ```
 
 
