@@ -177,7 +177,7 @@ Then click "Add Gateway". The following dialog should appear:
 
 Enter your Gateway EUI into the Gateway EUI field, give your gateway a unique Gateway ID and a suitable name. Make sure the correct Gateway Server address is set (i.e. eu1.cloud.thethigns.network for Europe). Select the correct frequency plan for your country or location (i.e. Europe 863-870 MHz (SF9 for RX2 - recommended)) and click "Create gateway". You should now have an enrolled gateway.
 
-The important thing now is to create the LNS API key in ordert to authorise your gateway. Click API keys and then + Add API key (in the top righthand corner).
+The important thing now is to create the LNS API key in order to authorise your gateway. Click API keys and then + Add API key (in the top right hand corner).
 
 <img src="https://github.com/iot-basel/ic880a-basicstation/blob/main/images/gateway-overview.jpg?raw=true" alt="Gateway Dashboard"/>
 
@@ -197,7 +197,7 @@ and past your key right after the following text:
 ```
 Authorization: Bearer NNSXS.XXXXXX....
 ```
-where NNSXS.XXXXX.... is the coppied API key. Press Ctrl+X to exit, press Y to save and Enter.
+where NNSXS.XXXXX.... is the copied API key. Press Ctrl+X to exit, press Y to save and Enter.
 
 Start/restart your basic station inside your TTN folder and your gateway should successfully register:
 ```
@@ -208,7 +208,7 @@ Note: the Basic Station automatically takes the config files inside the folder, 
 More information on the Basic Station can be found in the [Offical LoRa Basics™ Station documentation](https://lora-developers.semtech.com/build/software/lora-basics/lora-basics-for-gateways/) from Semtech.
 
 ## Create System Service for automatic boot (optional)
-In case you didn't reflash your SD card and still have Semtech's UDP packet forwarder on your system, make sure the old ttn-gatway service is disbaled or deinstall the the packet forwarder.
+In case you didn't reflash your SD card and still have Semtech's UDP packet forwarder on your system, make sure the old ttn-gatway service is disbaled or deinstall the packet forwarder.
 
 Go to /lib/systemd/system directory and create the service file
 ```
