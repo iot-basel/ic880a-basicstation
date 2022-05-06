@@ -10,20 +10,20 @@ Alternatively, you can use an IMST LoRa® Lite Gateway, which is nothing else th
 
 **Warning**: never power up your hardware without the antenna attached!
 
-### Installation
+## Installation
 Install a functional operating system on your RPi with network (and ideally SSH) enabled. We prefer to use Raspberry Pi OS Lite without a desktop, which you can download directly within the [Raspberry Pi Imager](https://www.raspberrypi.com/software/) when flashing your SD card.
 
 <img src="https://github.com/iot-basel/ic880a-basicstation/blob/main/images/pi-imager.jpg?raw=true" alt="PI Imager" width="400"/>
 
-Before flashing, make sure to modify your settings in order to activate SSH. You can also set the hostname, username and password. Note: Since the Raspberry Pi OS Bullsey April 2022 update, the account creation process no longer features a default username "pi" due to security reasons. So best thing to do is defining your own user befor flashing your SD card.
+Before flashing, make sure to modify your settings in order to activate SSH. You can also set the hostname, username and password. Note: Since the Raspberry Pi OS Bullsey April 2022 update, the account creation process no longer features a default username "pi" due to security reasons. So the best thing to do is to define your own user before flashing your SD card.
 
-Another note: Using the WiFi for network connection is not recommended due to noise interference with the LoRaWAN. On the other hand, if you choose WiFi instead of Ethernet, then try to use a dongle with external antenna and move the antenna outside the enclosure to have less noise inside the box.
+Another note: Using the WiFi for network connection is not recommended due to noise interference with the LoRaWAN. On the other hand, if you choose WiFi instead of Ethernet, then try to use a dongle with an external antenna and move the antenna outside the enclosure to have less noise inside the box.
 
 <img src="https://github.com/iot-basel/ic880a-basicstation/blob/main/images/pi-imager-settings.jpg?raw=true" alt="PI Imager settings" width="400"/>
 
 Insert the newly flashed SD card into your RPi, make sure the LoRa antenna is attached and plug the power supply. This will also power the concentrator board, so make sure your power supply can draw at least 2.5 A.
 
-From a computer in the same LAN, ssh into the RPi using either your defined hostname or the assigend IP address:
+From a computer in the same LAN, ssh into the RPi using either your defined hostname or the assigned IP address:
 ```
 $ ssh [username]@[hostname]
 ```
@@ -49,19 +49,20 @@ $ make platform=rpi variant=std
 This will take a while. During the build process, dependencies such as [mbed TLS](https://github.com/ARMmbed/mbedtls/) and the libloragw [SX1301](https://github.com/Lora-net/lora_gateway)/[SX1302](https://github.com/Lora-net/sx1302_hal) Driver/HAL are downloaded and compiled.
 
 ## Testing the installation
-You will find some examples how to use the basic station in the examples folder. Assuming SPI is enabled and wired correctly, you can test the station by passing the LoRaWAN concentrator (SPI device) as an environment variable using `RADIODEV`:
+You will find some examples on how to use the basic station in the examples folder. Assuming SPI is enabled and wired correctly, you can test the station by passing the LoRaWAN concentrator (SPI device) as an environment variable using `RADIODEV`:
 ```
 $ cd examples/live-s2.sm.tc
 $ RADIODEV=/dev/spidev0.0 ../../build-rpi-std/bin/station
 ```
-The example configuration connects to a public test server s2.sm.tc through which the basic station fetches all required credentials and a channel plan matching the region as determined from the IP address of the gateway. Provided there are active LoRa devices in proximity, received LoRa frames are printed in the log output on `stderr`
+Note: We will later add the SPI definition to the config.
+The example configuration connects to a public test server s2.sm.tc through which the basic station fetches all required credentials and a channel plan matching the region as determined from the IP address of the gateway. Provided there are active LoRa devices in proximity, received LoRa frames are printed in the log output on `stderr`.
 
 If you see an error like `Concentrator start failed: lgw_start`, this is likely due to the missing reset of the SX1301 (see next chapter).
 
 ## Concentrator reset
 The SX1301 digital baseband chip on the iC880a concentrator board should be reset after power-up. However, this initial reset of the SX1301 is not performed by the basic station. We have to do this manually by controlling the correct GPIO pin: GPIO 5 for the IMST Light Gateway or GPIO 25 (corresponds to RPi Pin 22) when using the DIY wiki of TTN ZH)
 
-We want keep the configuration files as well as the reset script together, so lets create a new folder inside the user directory.
+We want to keep the configuration files as well as the reset script together, so lets create a new folder inside the user directory.
 ```
 $ cd ~
 $ mkdir TTN
@@ -92,7 +93,7 @@ echo "Done\n"
 Then, press Ctrl+X to exit, press Y to save and Enter.
 Note: replace the number 5 on the 3rd line with 25 when using the DIY version instead of the IMST Light Gateway.
 
-Make this file executable by changing its persmission:
+Make this file executable by changing its permission:
 ```
 $ chmod +x reset_gw.sh
 ```
@@ -159,7 +160,7 @@ Next, we need to establish a trust relationship with the TTN network server. TTN
 ```
 $ curl https://letsencrypt.org/certs/isrgrootx1.pem.txt -o tc.trust
 ```
-Note: You may also use a self signed certificat, if you need to connect to your private TTS network server (more information [here](https://www.thethingsindustries.com/docs/reference/root-certificates/)).
+Note: You may also use a self signed certificate, if you need to connect to your private TTS network server (more information [here](https://www.thethingsindustries.com/docs/reference/root-certificates/)).
 
 Last, we also need to create a tc.key file to authorise the gateway, but more on this later, since first we need to register the gateway.
 
