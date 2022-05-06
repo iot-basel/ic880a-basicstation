@@ -5,8 +5,8 @@ This is a reference setup for [The Things Network](https://www.thethingsnetwork.
 [The Things Stack (TTS)](https://github.com/TheThingsNetwork/lorawan-stack) is an open-source LoRaWAN Network Server stack. The Things Network (TTN) is a global collaborative Internet of Things ecosystem that creates networks, devices and solutions using LoRaWAN. TTN runs nothing else than the TTS Community Edition
 
 ## Setup
-If you want to assembly the hardware yourself, go to the best howto from our friends at [TTN-Zürich](https://github.com/ttn-zh/ic880a-gateway/wiki). Stop before "Setting up the software" and come back here.
-Alternativly, you can use an IMST LoRa® Lite Gateway, which is nothing else than a iC880a concentator board preassembled on a Raspberry Pi.
+If you want to assemble the hardware yourself, go to the best howto from our friends at [TTN-Zürich](https://github.com/ttn-zh/ic880a-gateway/wiki). Stop before "Setting up the software" and come back here.
+Alternatively, you can use an IMST LoRa® Lite Gateway, which is nothing else than a iC880a concentrator board pre assembled on a Raspberry Pi.
 
 **Warning**: never power up your hardware without the antenna attached!
 
