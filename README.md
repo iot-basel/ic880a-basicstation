@@ -76,16 +76,18 @@ and populate it with the following commands:
 ```
 #! /bin/bash
 
-SX1301_RESET_BCM_PIN=5
-echo "$SX1301_RESET_BCM_PIN"  > /sys/class/gpio/export
-echo "out" > /sys/class/gpio/gpio$SX1301_RESET_BCM_PIN/direction
-echo "0"   > /sys/class/gpio/gpio$SX1301_RESET_BCM_PIN/value
-sleep 0.1
-echo "1"   > /sys/class/gpio/gpio$SX1301_RESET_BCM_PIN/value
-sleep 0.1
-echo "0"   > /sys/class/gpio/gpio$SX1301_RESET_BCM_PIN/value
-sleep 0.1
-echo "$SX1301_RESET_BCM_PIN"  > /sys/class/gpio/unexport
+SX1301_RESET_PIN=5
+echo "$SX1301_RESET_PIN"  > /sys/class/gpio/export
+sleep 1
+echo "out" > /sys/class/gpio/gpio$SX1301_RESET_PIN/direction
+echo "0"   > /sys/class/gpio/gpio$SX1301_RESET_PIN/value
+sleep 0.5
+echo "1"   > /sys/class/gpio/gpio$SX1301_RESET_PIN/value
+sleep 1
+echo "0"   > /sys/class/gpio/gpio$SX1301_RESET_PIN/value
+sleep 0.5
+echo "$SX1301_RESET_PIN"  > /sys/class/gpio/unexport
+echo "Done\n"
 ```
 Then, press Ctrl+X to exit, press Y to save and Enter.
 Note: replace the number 5 on the 3rd line with 25 when using the DIY version instead of the IMST Light Gateway.
@@ -108,13 +110,15 @@ and populate it with:
    "radio_conf": {                  /* Actual channel plan is controlled by the server */
        "lorawan_public": true,      /* is default */
        "clksrc": 1,                 /* radio_1 provides clock to concentrator */
+       /* path to the SPI device, un-comment if not specified on the command line e.g., RADIODEV=/dev/spidev0.0 */
        "device": "/dev/spidev0.0",  /* default SPI device is platform specific */
        "pps": true,
        "radio_0": {
            /* freq/enable provided by LNS - only hardware-specific settings are listed here */
            "type": "SX1257",
            "rssi_offset": -166.0,
-           "tx_enable": true
+           "tx_enable": true,
+           "antenna_gain": 0
        },
        "radio_1": {
            "type": "SX1257",
@@ -143,7 +147,7 @@ The CUPS protocol enables credential management, as well as remote configuration
 
 In this reference setup we will use the LNS method. Create a file called tc.uri 
 ```
-nano tc.uri
+$ nano tc.uri
 ```
 and populate it with the server name. Packet transport with the The Things Network V3 LNS happens on port 8887.
 ```
@@ -162,35 +166,84 @@ Last, we also need to create a tc.key file to authorise the gateway, but more on
 ## Register gateway
 To register your gateway with TTN, you will need the gateway’s EUI, which is made up from the Raspberry Pi’s MAC address. It is shown in the first couple of lines when starting the station, i.e.
 ```
-2022-05-02 11:22:20.288 [SYS:INFO] proto EUI   : 0:b827:eb22:6cb9       (/sys/class/net/eth0/address)
+2022-05-06 08:15:40.039 [SYS:INFO] Station EUI : b827:ebff:fe5d:51f8
 ```
 Log into the TTN [console](https://console.cloud.thethings.network/) and click "Go to gateways"
 
 Then click "Add Gateway". The following dialog should appear:
 
-Enter your Gateway EUI into the Gateway EUI field, give your gateway a unique Gateway ID and a suitable name.
+<img src="https://github.com/iot-basel/ic880a-basicstation/blob/main/images/add-gateway.jpg?raw=true" alt="Add Gateway"/>
 
-Now set the correct frequency plan for your country or location:
-
-And click Create gateway. You should now have an enrolled gateway.
+Enter your Gateway EUI into the Gateway EUI field, give your gateway a unique Gateway ID and a suitable name. Make sure the correct Gateway Server address is set (i.e. eu1.cloud.thethigns.network for Europe). Select the correct frequency plan for your country or location (i.e. Europe 863-870 MHz (SF9 for RX2 - recommended)) and click "Create gateway". You should now have an enrolled gateway.
 
 The important thing now is to create the LNS API key in ordert to authorise your gateway. Click API keys and then + Add API key (in the top righthand corner).
 
+<img src="https://github.com/iot-basel/ic880a-basicstation/blob/main/images/gateway-overview.jpg?raw=true" alt="Gateway Dashboard"/>
+
 Give your API key a name (e.g. lns-key) and change the rights to grant individual rights to "link as Gateway to a Gateway Server for traffic exchange, i.e. write uplink and read downlink" as per the example below. Then click Create API key to create it.
 
-You will be given a one time opportunity to copy the key. Click the copy button (highlighted below by the red box). Now, you can create our tc.key file back in the RPi console
+<img src="https://github.com/iot-basel/ic880a-basicstation/blob/main/images/add-api-key.jpg?raw=true" alt="Add API LNS Key" width="600"/>
+
+You will be given a one time opportunity to copy the key. Click the copy button. 
+
+<img src="https://github.com/iot-basel/ic880a-basicstation/blob/main/images/copy-api-key.jpg?raw=true" alt="Copy API LNS Key" width="600"/>
+
+You can now create our tc.key file back in the RPi console
 ```
 $ nano tc.key
 ```
 and past your key right after the following text:
 ```
-Authorization: Bearer XXXXXX
+Authorization: Bearer NNSXS.XXXXXX....
 ```
-where XXXXX is the coppied API key. Press Ctrl+X to exit, press Y to save and Enter.
+where NNSXS.XXXXX.... is the coppied API key. Press Ctrl+X to exit, press Y to save and Enter.
 
-Now start/restart station inside your TTN folder and your gateway should successfully register:
+Start/restart your basic station inside your TTN folder and your gateway should successfully register:
 ```
 $ ~/basicstation/build-rpi-std/bin/station
 ```
-Note: the Basic Station automatically takes the config files inside the folder, where you start the station.
+Note: the Basic Station automatically takes the config files inside the folder, where you start the station. It will also add the files tc-bak.done, tc-bak.key, tc-bak.trust and tc-bak.uri once connected
+
 More information on the Basic Station can be found in the [Offical LoRa Basics™ Station documentation](https://lora-developers.semtech.com/build/software/lora-basics/lora-basics-for-gateways/) from Semtech.
+
+## Create System Service for automatic boot (optional)
+In case you didn't reflash your SD card and still have Semtech's UDP packet forwarder on your system, make sure the old ttn-gatway service is disbaled or deinstall the the packet forwarder.
+
+Go to /lib/systemd/system directory and create the service file
+```
+$ cd /lib/systemd/system
+$ sudo nano basicstation.service
+```
+with the following content:
+```
+[Unit]
+Description=Basic Sation TTN V3 service
+
+[Service]
+WorkingDirectory=/opt/basicstation/bin
+ExecStart=/opt/basicstation/bin/station -h /home/[username]/TTN
+SyslogIdentifier=ttn-gateway
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+again, press Ctrl+X to exit, press Y to save and Enter.
+Note: Make sure to replace [username] with your actual username created when flashing your SD card.
+
+Enable the basicstation service
+```
+$ sudo systemctl enable basicstation.service
+```
+
+Make sure you have stopped the basic station started in the chapter before and then start it via the service:
+```
+$ sudo systemctl start basicstation.service
+```
+
+If you want to check the status of your service, use the following command:
+```
+$ systemctl status basicstation.service
+```
+You should see some green output saying `active (running)`
