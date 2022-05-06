@@ -129,6 +129,8 @@ and populate it with:
        /* chan_multiSF_X, chan_Lora_std, chan_FSK provided by LNS */
    },
    "station_conf": {
+     "RADIO_INIT_WAIT": "2s",
+     "radio_init": "~/TTN/reset_concentrator.sh",
      "log_file":    "stderr",
      "log_level":   "DEBUG",
      "log_size":    10e6,
