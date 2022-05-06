@@ -1,5 +1,5 @@
 # The Things Network: iC880a based Semtech LoRa Basics™ Station
-This is a reference setup for [The Things Network](https://www.thethingsnetwork.org/) gateways based on the IMST iC880a SPI concentrator with a Raspberry Pi as host platform. As LoRaWAB gateway software the official Semtech [Basic Station](https://github.com/lorabasics/basicstation) implementation is used. The setup works with both the The Things Network (TTN) and The Things Stack (TTS) Private Server at the current version 3 of the Network Server implementation, informally known as V3.
+This is a reference setup for [The Things Network](https://www.thethingsnetwork.org/) gateways based on the IMST iC880a SPI concentrator with a Raspberry Pi as host platform. As LoRaWAN gateway software the official Semtech [Basic Station](https://github.com/lorabasics/basicstation) implementation is used. The setup works with both the The Things Network (TTN) and The Things Stack (TTS) Private Server at the current version 3 of the Network Server implementation, informally known as V3.
 
 ## Basics
 [The Things Stack (TTS)](https://github.com/TheThingsNetwork/lorawan-stack) is an open-source LoRaWAN Network Server stack. The Things Network (TTN) is a global collaborative Internet of Things ecosystem that creates networks, devices and solutions using LoRaWAN. TTN runs nothing else than the TTS Community Edition
