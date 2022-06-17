@@ -130,7 +130,7 @@ and populate it with:
    },
    "station_conf": {
      "RADIO_INIT_WAIT": "2s",
-     "radio_init": "~/TTN/reset_concentrator.sh",
+     "radio_init": "/home/[username]/TTN/reset_concentrator.sh",
      "log_file":    "stderr",
      "log_level":   "DEBUG",
      "log_size":    10e6,
@@ -138,7 +138,7 @@ and populate it with:
    }
 }
 ```
-Then, press Ctrl+X to exit, press Y to save and Enter.
+Then, press Ctrl+X to exit, press Y to save and Enter. Maker sure to replace ```[username]``` with your actual username
 
 Further details of the configuration file can be found in the official [Semtech LoRa Basics™ Station documentation](https://lora-developers.semtech.com/build/software/lora-basics/lora-basics-for-gateways/?url=conf.html).
 
@@ -201,6 +201,13 @@ Authorization: Bearer NNSXS.XXXXXX....
 ```
 where NNSXS.XXXXX.... is the copied API key. Press Ctrl+X to exit, press Y to save and Enter.
 
+There are some situations where this tc.key file cannot be read due to wrong line endings. If so, you can also create the file by the following cammands:
+```
+export LNS_KEY="xxxx"
+echo "Authorization: Bearer $LNS_KEY" | perl -p -e 's/\r\n|\n|\r/\r\n/g' > tc.key
+```
+where xxxx is the string copied when creating the lns-key in the create gateway process.
+
 Start/restart your basic station inside your TTN folder and your gateway should successfully register:
 ```
 $ ~/basicstation/build-rpi-std/bin/station
@@ -223,8 +230,8 @@ with the following content:
 Description=Basic Sation TTN V3 service
 
 [Service]
-WorkingDirectory=/opt/basicstation/bin
-ExecStart=/opt/basicstation/bin/station -h /home/[username]/TTN
+WorkingDirectory=/home/[username]/basicstation/bin
+ExecStart=/home/[username]/basicstation/build-rpi-std/bin/statio -h /home/[username]/TTN
 SyslogIdentifier=ttn-gateway
 Restart=on-failure
 RestartSec=5
