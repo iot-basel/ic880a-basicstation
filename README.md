@@ -231,7 +231,7 @@ Description=Basic Sation TTN V3 service
 
 [Service]
 WorkingDirectory=/home/[username]/basicstation/bin
-ExecStart=/home/[username]/basicstation/build-rpi-std/bin/statio -h /home/[username]/TTN
+ExecStart=/home/[username]/basicstation/build-rpi-std/bin/station -h /home/[username]/TTN
 SyslogIdentifier=ttn-gateway
 Restart=on-failure
 RestartSec=5
