@@ -77,7 +77,7 @@ and populate it with the following commands:
 ```
 #! /bin/bash
 
-SX1301_RESET_PIN=5
+SX1301_RESET_PIN=25
 echo "$SX1301_RESET_PIN"  > /sys/class/gpio/export
 sleep 1
 echo "out" > /sys/class/gpio/gpio$SX1301_RESET_PIN/direction
@@ -91,7 +91,7 @@ echo "$SX1301_RESET_PIN"  > /sys/class/gpio/unexport
 echo "Done\n"
 ```
 Then, press Ctrl+X to exit, press Y to save and Enter.
-Note: replace the number 5 on the 3rd line with 25 when using the DIY version instead of the IMST Light Gateway.
+Note: replace the number 25 on the 3rd line with 5 when using the IMST Light Gateway instead of the DIY version.
 
 Make this file executable by changing its permission:
 ```
