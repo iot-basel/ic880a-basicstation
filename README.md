@@ -28,7 +28,7 @@ From a computer in the same LAN, ssh into the RPi using either your defined host
 $ ssh [username]@[hostname]
 ```
 
-Use `raspi-config` utility to enable SPI (`[5] Interfacing options -> P4 SPI`), because it normally switched off by default:
+Use `raspi-config` utility to enable SPI (`3 Interfacing options -> I4 SPI`), because it normally switched off by default:
 ```
 $ sudo raspi-config
 ```
@@ -227,10 +227,10 @@ $ sudo nano basicstation.service
 with the following content:
 ```
 [Unit]
-Description=Basic Sation TTN V3 service
+Description=Basic Station TTN V3 service
 
 [Service]
-WorkingDirectory=/home/[username]/basicstation/bin
+WorkingDirectory=/home/[username]/basicstation
 ExecStart=/home/[username]/basicstation/build-rpi-std/bin/station -h /home/[username]/TTN
 SyslogIdentifier=ttn-gateway
 Restart=on-failure
